@@ -244,8 +244,9 @@
   function toggleMute() {
     muted = !muted; if (currentVideo) currentVideo.muted = muted; updateMuteBadge();
   }
-  function openCurrent() { if (activeSlide) window.open(activeSlide.data.url, '_blank'); }
-
+  function openCurrent() {
+    if (activeSlide) window.open(activeSlide.data.thread_url, '_blank');
+  }
   document.getElementById('btn-next').addEventListener('click', nextVideo);
   document.getElementById('btn-replies').addEventListener('click', togglePanel);
   document.getElementById('btn-mute').addEventListener('click', toggleMute);
