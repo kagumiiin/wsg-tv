@@ -18,9 +18,9 @@
     #feed { flex: 1; position: relative; overflow: hidden; background: #000; transition: margin-right 0.4s cubic-bezier(0.77,0,0.175,1); }
     #feed.panel-open { margin-right: var(--panel-width); }
     .video-slide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.45s cubic-bezier(0.77,0,0.175,1), opacity 0.45s ease; }
-    .video-slide.active  { transform: translateY(0);    opacity: 1; z-index: 2; }
-    .video-slide.above   { transform: translateY(-100%); opacity: 0; z-index: 1; }
-    .video-slide.below   { transform: translateY(100%);  opacity: 0; z-index: 1; }
+    .video-slide.active               { transform: translateY(0);    opacity: 1; z-index: 2; }
+    .video-slide.above                { transform: translateY(-100%); opacity: 0; z-index: 1; }
+    .video-slide.below                { transform: translateY(100%);  opacity: 0; z-index: 1; }
     .video-slide.entering-from-bottom { transform: translateY(100%);  opacity: 0; z-index: 3; }
     .video-slide.entering-from-top    { transform: translateY(-100%); opacity: 0; z-index: 3; }
     .video-slide video { max-width: 100%; max-height: 100vh; width: auto; height: 100%; object-fit: contain; display: block; }
@@ -47,16 +47,13 @@
     .reply-meta span { color: var(--accent); opacity: 0.8; }
     .reply-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.75); white-space: pre-wrap; word-break: break-word; }
     .no-replies { padding: 32px 20px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; line-height: 1.8; }
-    .panel-loading { display: flex; align-items: center; justify-content: center; padding: 40px; gap: 12px; flex-direction: column; }
-    .panel-spinner { width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .panel-spinner-text { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
     #sidebar { width: 72px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 28px 0; background: var(--surface); border-left: 1px solid var(--border); z-index: 30; }
     .logo { font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing: 0.08em; color: var(--accent); writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); user-select: none; }
     .sidebar-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.15s; font-size: 18px; }
-    .btn:hover { background: rgba(255,255,255,0.07); border-color: var(--accent); transform: scale(1.08); }
-    .btn:active { transform: scale(0.95); }
+    .btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.15s, opacity 0.2s; font-size: 18px; }
+    .btn:hover:not(:disabled) { background: rgba(255,255,255,0.07); border-color: var(--accent); transform: scale(1.08); }
+    .btn:active:not(:disabled) { transform: scale(0.95); }
+    .btn:disabled { opacity: 0.25; cursor: default; }
     .btn.primary { background: var(--accent); border-color: var(--accent); color: #000; font-size: 20px; }
     .btn.primary:hover { background: #00ffaa; border-color: #00ffaa; }
     .btn.active-btn { border-color: var(--accent); background: rgba(0,255,136,0.1); }
@@ -65,6 +62,7 @@
     #loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 50; gap: 20px; transition: opacity 0.4s ease; }
     #loader.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .loader-text { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
     #toast { position: absolute; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--accent2); color: #fff; font-family: var(--font-mono); font-size: 11px; padding: 10px 20px; border-radius: 4px; z-index: 60; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); white-space: nowrap; }
     #toast.show { transform: translateX(-50%) translateY(0); }
@@ -72,8 +70,9 @@
     #mute-badge.hidden { opacity: 0; }
     #progress-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); width: 0%; z-index: 15; transition: width 0.1s linear; }
     .nav-hint { position: absolute; right: 84px; display: flex; flex-direction: column; gap: 8px; z-index: 10; top: 50%; transform: translateY(-50%); }
-    .nav-arrow { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: border-color 0.2s, color 0.2s; }
-    .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-arrow { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: border-color 0.2s, color 0.2s, opacity 0.2s; }
+    .nav-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .nav-arrow:disabled { opacity: 0.2; cursor: default; }
   </style>
 </head>
 <body>
@@ -83,7 +82,7 @@
     <div id="mute-badge">MUTED</div>
     <div id="progress-bar"></div>
     <div class="nav-hint">
-      <button class="nav-arrow" id="btn-up">▲</button>
+      <button class="nav-arrow" id="btn-up" disabled>▲</button>
       <button class="nav-arrow" id="btn-down">▼</button>
     </div>
   </div>
@@ -96,14 +95,13 @@
       <span class="thread-link-label">OPEN THREAD TO REPLY ↗</span>
       <span class="thread-link-arrow">→</span>
     </a>
-    <div id="replies-list">
-      <div class="panel-loading"><div class="panel-spinner"></div><div class="panel-spinner-text">LOADING</div></div>
-    </div>
+    <div id="replies-list"></div>
   </div>
   <div id="sidebar">
     <div class="logo">wsg.tv</div>
     <div class="sidebar-actions">
       <div class="btn-group"><button class="btn primary" id="btn-next">↓</button><span class="btn-label">NEXT</span></div>
+      <div class="btn-group"><button class="btn" id="btn-prev" disabled>↑</button><span class="btn-label">PREV</span></div>
       <div class="btn-group"><button class="btn" id="btn-replies">💬</button><span class="btn-label">REPLIES</span></div>
       <div class="btn-group"><button class="btn" id="btn-mute">🔇</button><span class="btn-label">MUTE</span></div>
       <div class="btn-group"><button class="btn" id="btn-open">↗</button><span class="btn-label">OPEN</span></div>
@@ -114,21 +112,41 @@
 <div id="toast"></div>
 <script>
   const API = '/api/random-video';
-  let currentVideo = null, activeSlide = null, muted = true, panelOpen = false, isTransitioning = false, preloaded = null;
 
-  const feed = document.getElementById('feed');
-  const panel = document.getElementById('panel');
-  const loader = document.getElementById('loader');
-  const toast = document.getElementById('toast');
-  const muteBadge = document.getElementById('mute-badge');
+  let currentVideo = null;
+  let activeSlide  = null;
+  let muted        = true;
+  let panelOpen    = false;
+  let isTransitioning = false;
+  let preloaded    = null;
+
+  // History stack of slide objects
+  const historyStack = [];
+
+  const feed        = document.getElementById('feed');
+  const panel       = document.getElementById('panel');
+  const loader      = document.getElementById('loader');
+  const toast       = document.getElementById('toast');
+  const muteBadge   = document.getElementById('mute-badge');
   const progressBar = document.getElementById('progress-bar');
   const repliesList = document.getElementById('replies-list');
-  const replyCount = document.getElementById('reply-count');
-  const threadLink = document.getElementById('thread-link');
-  const btnReplies = document.getElementById('btn-replies');
+  const replyCount  = document.getElementById('reply-count');
+  const threadLink  = document.getElementById('thread-link');
+  const btnReplies  = document.getElementById('btn-replies');
+  const btnPrev     = document.getElementById('btn-prev');
+  const btnUp       = document.getElementById('btn-up');
 
+  // ── Enable/disable back buttons based on history ──
+  function updateNavButtons() {
+    const canGoBack = historyStack.length >= 2;
+    btnPrev.disabled = !canGoBack;
+    btnUp.disabled   = !canGoBack;
+  }
+
+  // ── Toast ──
   function showToast(msg, dur = 3000) {
-    toast.textContent = msg; toast.classList.add('show');
+    toast.textContent = msg;
+    toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), dur);
   }
 
@@ -136,6 +154,7 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  // ── Replies panel ──
   function renderReplies(data) {
     if (!data) return;
     threadLink.href = data.thread_url || '#';
@@ -153,60 +172,86 @@
   }
 
   function openPanel() {
-    panelOpen = true; panel.classList.add('open'); feed.classList.add('panel-open');
-    btnReplies.classList.add('active-btn'); renderReplies(activeSlide?.data);
+    panelOpen = true;
+    panel.classList.add('open');
+    feed.classList.add('panel-open');
+    btnReplies.classList.add('active-btn');
+    renderReplies(activeSlide?.data);
   }
   function closePanel() {
-    panelOpen = false; panel.classList.remove('open'); feed.classList.remove('panel-open');
+    panelOpen = false;
+    panel.classList.remove('open');
+    feed.classList.remove('panel-open');
     btnReplies.classList.remove('active-btn');
   }
   function togglePanel() { panelOpen ? closePanel() : openPanel(); }
 
+  // ── API fetch ──
   async function fetchVideo() {
     const res = await fetch(API);
     if (!res.ok) throw new Error('API error');
     return await res.json();
   }
 
+  // ── Create a slide DOM element ──
   function createSlide(data) {
     const slide = document.createElement('div');
     slide.className = 'video-slide below';
     const video = document.createElement('video');
-    video.src = data.url; video.loop = true; video.muted = muted; video.playsInline = true; video.preload = 'auto';
+    video.src = data.url;
+    video.loop = true;
+    video.muted = muted;
+    video.playsInline = true;
+    video.preload = 'auto';
     const info = document.createElement('div');
     info.className = 'video-info';
-    info.innerHTML = `<div class="video-filename">${data.filename || data.url.split('/').pop()}</div>
+    info.innerHTML = `
+      <div class="video-filename">${data.filename || data.url.split('/').pop()}</div>
       <div class="video-postno">No.${data.post_no} · ${(data.replies||[]).length} repl${(data.replies||[]).length===1?'y':'ies'}</div>`;
-    slide.appendChild(video); slide.appendChild(info); feed.appendChild(slide);
+    slide.appendChild(video);
+    slide.appendChild(info);
+    feed.appendChild(slide);
     return { slide, video, data };
   }
 
-  async function transitionTo(newSlide, direction = 'up') {
+  // ── Animate between slides ──
+  async function transitionTo(newSlide, direction) {
     if (isTransitioning) return;
     isTransitioning = true;
+
     const enterClass = direction === 'up' ? 'entering-from-bottom' : 'entering-from-top';
-    newSlide.slide.classList.remove('above','below','active');
+    newSlide.slide.classList.remove('above', 'below', 'active');
     newSlide.slide.classList.add(enterClass);
-    newSlide.slide.getBoundingClientRect();
+    newSlide.slide.getBoundingClientRect(); // force reflow
+
     if (activeSlide) {
       activeSlide.slide.classList.remove('active');
       activeSlide.slide.classList.add(direction === 'up' ? 'above' : 'below');
       activeSlide.video.pause();
     }
+
     newSlide.slide.classList.remove(enterClass);
     newSlide.slide.classList.add('active');
     currentVideo = newSlide.video;
     currentVideo.muted = muted;
-    try { await currentVideo.play(); } catch {
-      currentVideo.muted = true; muted = true; updateMuteBadge();
-      await currentVideo.play().catch(()=>{});
+
+    try {
+      await currentVideo.play();
+    } catch {
+      currentVideo.muted = true;
+      muted = true;
+      updateMuteBadge();
+      await currentVideo.play().catch(() => {});
     }
+
     activeSlide = newSlide;
     trackProgress();
     if (panelOpen) renderReplies(newSlide.data);
+
     setTimeout(() => { isTransitioning = false; }, 500);
   }
 
+  // ── Progress bar ──
   let progressInterval = null;
   function trackProgress() {
     if (progressInterval) clearInterval(progressInterval);
@@ -217,70 +262,133 @@
     }, 100);
   }
 
+  // ── Preload next ──
   async function preloadNext() {
-    try { const data = await fetchVideo(); preloaded = createSlide(data); } catch { preloaded = null; }
+    try {
+      const data = await fetchVideo();
+      preloaded = createSlide(data);
+    } catch { preloaded = null; }
   }
 
+  // ── Go forward ──
   async function nextVideo() {
     if (isTransitioning) return;
     loader.classList.remove('hidden');
+
     let next;
     if (preloaded) {
-      next = preloaded; preloaded = null; loader.classList.add('hidden');
+      next = preloaded;
+      preloaded = null;
+      loader.classList.add('hidden');
     } else {
-      try { const data = await fetchVideo(); next = createSlide(data); loader.classList.add('hidden'); }
-      catch { loader.classList.add('hidden'); showToast('Failed to fetch — is the server running?'); return; }
+      try {
+        const data = await fetchVideo();
+        next = createSlide(data);
+        loader.classList.add('hidden');
+      } catch {
+        loader.classList.add('hidden');
+        showToast('Failed to fetch — is the server running?');
+        return;
+      }
     }
+
     await transitionTo(next, 'up');
+
+    // Push to history after transition
+    historyStack.push(next);
+    updateNavButtons();
+
+    // Clean up old slides (keep max 5 in DOM)
     const all = feed.querySelectorAll('.video-slide');
-    if (all.length > 3) all[0].remove();
+    if (all.length > 5) all[0].remove();
+
     preloadNext();
   }
 
+  // ── Go back ──
+  async function prevVideo() {
+    if (isTransitioning || historyStack.length < 2) return;
+
+    // Pop current off the stack
+    historyStack.pop();
+    const prev = historyStack[historyStack.length - 1];
+    if (!prev) return;
+
+    await transitionTo(prev, 'down');
+    updateNavButtons();
+  }
+
+  // ── Mute ──
   function updateMuteBadge() {
     muteBadge.classList.toggle('hidden', !muted);
     document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
   }
   function toggleMute() {
-    muted = !muted; if (currentVideo) currentVideo.muted = muted; updateMuteBadge();
+    muted = !muted;
+    if (currentVideo) currentVideo.muted = muted;
+    updateMuteBadge();
   }
+
+  // ── Open thread ──
   function openCurrent() {
     if (activeSlide) window.open(activeSlide.data.thread_url, '_blank');
   }
+
+  // ── Button wiring ──
   document.getElementById('btn-next').addEventListener('click', nextVideo);
+  document.getElementById('btn-prev').addEventListener('click', prevVideo);
   document.getElementById('btn-replies').addEventListener('click', togglePanel);
   document.getElementById('btn-mute').addEventListener('click', toggleMute);
   document.getElementById('btn-open').addEventListener('click', openCurrent);
   document.getElementById('btn-panel-close').addEventListener('click', closePanel);
-  document.getElementById('btn-up').addEventListener('click', nextVideo);
+  btnUp.addEventListener('click', prevVideo);
   document.getElementById('btn-down').addEventListener('click', nextVideo);
 
+  // ── Keyboard ──
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextVideo(); }
-    if (e.key === 'ArrowUp') { e.preventDefault(); nextVideo(); }
-    if (e.key === 'm' || e.key === 'M') toggleMute();
-    if (e.key === 'o' || e.key === 'O') openCurrent();
-    if (e.key === 'r' || e.key === 'R') togglePanel();
-    if (e.key === 'Escape') closePanel();
+    if (e.key === 'ArrowUp')                    { e.preventDefault(); prevVideo(); }
+    if (e.key === 'm' || e.key === 'M')           toggleMute();
+    if (e.key === 'o' || e.key === 'O')           openCurrent();
+    if (e.key === 'r' || e.key === 'R')           togglePanel();
+    if (e.key === 'Escape')                       closePanel();
   });
 
+  // ── Touch swipe ──
   let touchStartY = 0;
   feed.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
-  feed.addEventListener('touchend', e => { if (Math.abs(touchStartY - e.changedTouches[0].clientY) > 50) nextVideo(); }, { passive: true });
+  feed.addEventListener('touchend', e => {
+    const delta = touchStartY - e.changedTouches[0].clientY;
+    if (delta > 50)  nextVideo(); // swipe up → next
+    if (delta < -50) prevVideo(); // swipe down → prev
+  }, { passive: true });
 
+  // ── Scroll wheel ──
   let wheelCooldown = false;
   feed.addEventListener('wheel', e => {
-    if (wheelCooldown) return; wheelCooldown = true; nextVideo();
+    if (wheelCooldown) return;
+    wheelCooldown = true;
+    if (e.deltaY > 0) nextVideo();
+    else              prevVideo();
     setTimeout(() => { wheelCooldown = false; }, 800);
   }, { passive: true });
 
+  // ── Click to play/pause ──
   feed.addEventListener('click', e => {
     if (e.target.closest('.btn') || e.target.closest('.nav-arrow') || e.target.closest('.video-info')) return;
     if (currentVideo) currentVideo.paused ? currentVideo.play() : currentVideo.pause();
   });
 
+  // ── Init ──
   updateMuteBadge();
-  nextVideo();
+  updateNavButtons();
+  nextVideo().then(() => {
+    // Push the first video into history
+    if (activeSlide && historyStack.length === 0) {
+      historyStack.push(activeSlide);
+      updateNavButtons();
+    }
+  });
 </script>
 </body>
 </html>

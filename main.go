@@ -130,18 +130,32 @@ func randomVideo() (VideoResponse, error) {
 	if err != nil {
 		return VideoResponse{}, err
 	}
+	if len(threadIDs) == 0 {
+		return VideoResponse{}, fmt.Errorf("no threads found")
+	}
 
-	rng.Shuffle(len(threadIDs), func(i, j int) {
-		threadIDs[i], threadIDs[j] = threadIDs[j], threadIDs[i]
-	})
+	// Pick a random thread ID and retry up to 10 times
+	client := &http.Client{Timeout: 5 * time.Second}
 
-	for _, id := range threadIDs {
-		thread, err := getThreadData(id)
-		if err != nil || thread == nil {
+	for attempts := 0; attempts < 10; attempts++ {
+		id := threadIDs[rng.Intn(len(threadIDs))]
+
+		url := fmt.Sprintf(threadURL, id)
+		resp, err := client.Get(url)
+		if err != nil || resp.StatusCode != 200 {
+			if resp != nil {
+				resp.Body.Close()
+			}
 			continue
 		}
 
-		// Collect all video posts
+		var thread Thread
+		err = json.NewDecoder(resp.Body).Decode(&thread)
+		resp.Body.Close()
+		if err != nil {
+			continue
+		}
+
 		var videoPosts []Post
 		for _, p := range thread.Posts {
 			if p.Ext == ".webm" || p.Ext == ".mp4" {
@@ -156,7 +170,7 @@ func randomVideo() (VideoResponse, error) {
 		replies := getRepliesTo(thread.Posts, post.No)
 
 		return VideoResponse{
-			URL: fmt.Sprintf("/proxy?url=%s%d%s", mediaBase, post.Tim, post.Ext),
+			URL:       fmt.Sprintf("/proxy?url=%s%d%s", mediaBase, post.Tim, post.Ext),
 			Filename:  post.Filename + post.Ext,
 			ThreadID:  id,
 			PostNo:    post.No,
@@ -165,7 +179,7 @@ func randomVideo() (VideoResponse, error) {
 		}, nil
 	}
 
-	return VideoResponse{}, fmt.Errorf("no videos found")
+	return VideoResponse{}, fmt.Errorf("could not find a video after 10 attempts")
 }
 
 func videoHandler(w http.ResponseWriter, r *http.Request) {
