@@ -24,9 +24,27 @@
     .video-slide.entering-from-bottom { transform: translateY(100%);  opacity: 0; z-index: 3; }
     .video-slide.entering-from-top    { transform: translateY(-100%); opacity: 0; z-index: 3; }
     .video-slide video { max-width: 100%; max-height: 100vh; width: auto; height: 100%; object-fit: contain; display: block; }
-    .video-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 24px 32px; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); z-index: 10; }
+    .video-info { position: absolute; bottom: 18px; left: 0; right: 0; padding: 20px 24px 16px; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); z-index: 10; }
     .video-filename { font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 85%; }
     .video-postno { font-family: var(--font-mono); font-size: 10px; color: var(--accent); opacity: 0.7; margin-top: 4px; letter-spacing: 0.06em; }
+
+    /* ── Seek bar ── */
+    #seek-bar-container {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 18px; z-index: 15; cursor: pointer;
+    }
+    #progress-bar {
+      position: absolute; bottom: 0; left: 0;
+      height: 2px; background: var(--accent); width: 0%;
+      pointer-events: none; transition: height 0.15s;
+    }
+    #seek-bar-container:hover #progress-bar { height: 4px; }
+    #seek-bar {
+      position: absolute; bottom: 0; left: 0;
+      width: 100%; height: 18px;
+      opacity: 0; cursor: pointer; margin: 0;
+    }
+
     #panel { position: absolute; top: 0; right: 72px; bottom: 0; width: var(--panel-width); background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 25; transform: translateX(calc(var(--panel-width) + 72px)); transition: transform 0.4s cubic-bezier(0.77,0,0.175,1); }
     #panel.open { transform: translateX(0); }
     .panel-header { padding: 20px 20px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
@@ -59,15 +77,7 @@
     .btn.active-btn { border-color: var(--accent); background: rgba(0,255,136,0.1); }
     .btn-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 0.05em; text-align: center; margin-top: -2px; }
     .btn-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    #volume-slider {
-      writing-mode: vertical-lr;
-      direction: rtl;
-      width: 36px;
-      height: 80px;
-      accent-color: var(--accent);
-      cursor: pointer;
-      background: transparent;
-    }
+    #volume-slider { writing-mode: vertical-lr; direction: rtl; width: 36px; height: 80px; accent-color: var(--accent); cursor: pointer; background: transparent; }
     #loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 50; gap: 20px; transition: opacity 0.4s ease; }
     #loader.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -77,7 +87,6 @@
     #toast.show { transform: translateX(-50%) translateY(0); }
     #mute-badge { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); border: 1px solid var(--border); border-radius: 4px; padding: 5px 10px; font-family: var(--font-mono); font-size: 10px; color: var(--muted); z-index: 10; letter-spacing: 0.06em; pointer-events: none; transition: opacity 0.3s; }
     #mute-badge.hidden { opacity: 0; }
-    #progress-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--accent); width: 0%; z-index: 15; transition: width 0.1s linear; }
     .nav-hint { position: absolute; right: 84px; display: flex; flex-direction: column; gap: 8px; z-index: 10; top: 50%; transform: translateY(-50%); }
     .nav-arrow { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.15); border-radius: 50%; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: border-color 0.2s, color 0.2s, opacity 0.2s; }
     .nav-arrow:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
@@ -89,7 +98,10 @@
   <div id="loader"><div class="spinner"></div><div class="loader-text">FETCHING /WSG/</div></div>
   <div id="feed">
     <div id="mute-badge">MUTED</div>
-    <div id="progress-bar"></div>
+    <div id="seek-bar-container">
+      <div id="progress-bar"></div>
+      <input type="range" id="seek-bar" min="0" max="1000" value="0" step="1"/>
+    </div>
     <div class="nav-hint">
       <button class="nav-arrow" id="btn-up" disabled>▲</button>
       <button class="nav-arrow" id="btn-down">▼</button>
@@ -142,6 +154,7 @@
   const toast       = document.getElementById('toast');
   const muteBadge   = document.getElementById('mute-badge');
   const progressBar = document.getElementById('progress-bar');
+  const seekBar     = document.getElementById('seek-bar');
   const repliesList = document.getElementById('replies-list');
   const replyCount  = document.getElementById('reply-count');
   const threadLink  = document.getElementById('thread-link');
@@ -241,7 +254,7 @@
 
     newSlide.slide.classList.remove(enterClass);
     newSlide.slide.classList.add('active');
-    currentVideo = newSlide.video;
+    currentVideo        = newSlide.video;
     currentVideo.muted  = muted;
     currentVideo.volume = volume;
 
@@ -265,9 +278,12 @@
   function trackProgress() {
     if (progressInterval) clearInterval(progressInterval);
     progressBar.style.width = '0%';
+    seekBar.value = 0;
     progressInterval = setInterval(() => {
       if (!currentVideo || !currentVideo.duration) return;
-      progressBar.style.width = ((currentVideo.currentTime / currentVideo.duration) * 100) + '%';
+      const pct = currentVideo.currentTime / currentVideo.duration;
+      progressBar.style.width = (pct * 100) + '%';
+      seekBar.value = pct * 1000;
     }, 100);
   }
 
@@ -325,7 +341,6 @@
   function toggleMute() {
     muted = !muted;
     if (currentVideo) currentVideo.muted = muted;
-    // Sync slider — if unmuting and volume was 0, bump it up
     if (!muted && volume === 0) {
       volume = 0.5;
       volSlider.value = volume;
@@ -337,6 +352,12 @@
   function openCurrent() {
     if (activeSlide) window.open(activeSlide.data.thread_url, '_blank');
   }
+
+  // ── Seek bar ──
+  seekBar.addEventListener('input', e => {
+    if (!currentVideo || !currentVideo.duration) return;
+    currentVideo.currentTime = (e.target.value / 1000) * currentVideo.duration;
+  });
 
   // ── Volume slider ──
   volSlider.addEventListener('input', e => {
@@ -368,10 +389,12 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextVideo(); }
     if (e.key === 'ArrowUp')                    { e.preventDefault(); prevVideo(); }
-    if (e.key === 'm' || e.key === 'M')           toggleMute();
-    if (e.key === 'o' || e.key === 'O')           openCurrent();
-    if (e.key === 'r' || e.key === 'R')           togglePanel();
-    if (e.key === 'Escape')                       closePanel();
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); if (currentVideo) currentVideo.currentTime = Math.max(0, currentVideo.currentTime - 5); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); if (currentVideo) currentVideo.currentTime = Math.min(currentVideo.duration || 0, currentVideo.currentTime + 5); }
+    if (e.key === 'm' || e.key === 'M') toggleMute();
+    if (e.key === 'o' || e.key === 'O') openCurrent();
+    if (e.key === 'r' || e.key === 'R') togglePanel();
+    if (e.key === 'Escape')             closePanel();
   });
 
   // ── Touch swipe ──
@@ -395,7 +418,7 @@
 
   // ── Click to play/pause ──
   feed.addEventListener('click', e => {
-    if (e.target.closest('.btn') || e.target.closest('.nav-arrow') || e.target.closest('.video-info')) return;
+    if (e.target.closest('.btn') || e.target.closest('.nav-arrow') || e.target.closest('.video-info') || e.target.id === 'seek-bar') return;
     if (currentVideo) currentVideo.paused ? currentVideo.play() : currentVideo.pause();
   });
 
