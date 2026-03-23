@@ -47,7 +47,7 @@
     .reply-meta span { color: var(--accent); opacity: 0.8; }
     .reply-text { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.75); white-space: pre-wrap; word-break: break-word; }
     .no-replies { padding: 32px 20px; text-align: center; font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 0.06em; line-height: 1.8; }
-    #sidebar { width: 72px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 28px 0; background: var(--surface); border-left: 1px solid var(--border); z-index: 30; }
+    #sidebar { width: 72px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 28px 0; background: var(--surface); border-left: 1px solid var(--border); z-index: 30; overflow-y: auto; }
     .logo { font-family: var(--font-display); font-weight: 800; font-size: 13px; letter-spacing: 0.08em; color: var(--accent); writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); user-select: none; }
     .sidebar-actions { display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s, transform 0.15s, opacity 0.2s; font-size: 18px; }
@@ -59,6 +59,15 @@
     .btn.active-btn { border-color: var(--accent); background: rgba(0,255,136,0.1); }
     .btn-label { font-family: var(--font-mono); font-size: 9px; color: var(--muted); letter-spacing: 0.05em; text-align: center; margin-top: -2px; }
     .btn-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    #volume-slider {
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 36px;
+      height: 80px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      background: transparent;
+    }
     #loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--bg); z-index: 50; gap: 20px; transition: opacity 0.4s ease; }
     #loader.hidden { opacity: 0; pointer-events: none; }
     .spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
@@ -104,6 +113,10 @@
       <div class="btn-group"><button class="btn" id="btn-prev" disabled>↑</button><span class="btn-label">PREV</span></div>
       <div class="btn-group"><button class="btn" id="btn-replies">💬</button><span class="btn-label">REPLIES</span></div>
       <div class="btn-group"><button class="btn" id="btn-mute">🔇</button><span class="btn-label">MUTE</span></div>
+      <div class="btn-group">
+        <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1"/>
+        <span class="btn-label">VOL</span>
+      </div>
       <div class="btn-group"><button class="btn" id="btn-open">↗</button><span class="btn-label">OPEN</span></div>
     </div>
     <div></div>
@@ -113,14 +126,14 @@
 <script>
   const API = '/api/random-video';
 
-  let currentVideo = null;
-  let activeSlide  = null;
-  let muted        = true;
-  let panelOpen    = false;
+  let currentVideo    = null;
+  let activeSlide     = null;
+  let muted           = true;
+  let volume          = 1;
+  let panelOpen       = false;
   let isTransitioning = false;
-  let preloaded    = null;
+  let preloaded       = null;
 
-  // History stack of slide objects
   const historyStack = [];
 
   const feed        = document.getElementById('feed');
@@ -135,15 +148,14 @@
   const btnReplies  = document.getElementById('btn-replies');
   const btnPrev     = document.getElementById('btn-prev');
   const btnUp       = document.getElementById('btn-up');
+  const volSlider   = document.getElementById('volume-slider');
 
-  // ── Enable/disable back buttons based on history ──
   function updateNavButtons() {
-    const canGoBack = historyStack.length >= 2;
+    const canGoBack  = historyStack.length >= 2;
     btnPrev.disabled = !canGoBack;
     btnUp.disabled   = !canGoBack;
   }
 
-  // ── Toast ──
   function showToast(msg, dur = 3000) {
     toast.textContent = msg;
     toast.classList.add('show');
@@ -154,7 +166,6 @@
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  // ── Replies panel ──
   function renderReplies(data) {
     if (!data) return;
     threadLink.href = data.thread_url || '#';
@@ -186,14 +197,12 @@
   }
   function togglePanel() { panelOpen ? closePanel() : openPanel(); }
 
-  // ── API fetch ──
   async function fetchVideo() {
     const res = await fetch(API);
     if (!res.ok) throw new Error('API error');
     return await res.json();
   }
 
-  // ── Create a slide DOM element ──
   function createSlide(data) {
     const slide = document.createElement('div');
     slide.className = 'video-slide below';
@@ -201,6 +210,7 @@
     video.src = data.url;
     video.loop = true;
     video.muted = muted;
+    video.volume = volume;
     video.playsInline = true;
     video.preload = 'auto';
     const info = document.createElement('div');
@@ -214,7 +224,6 @@
     return { slide, video, data };
   }
 
-  // ── Animate between slides ──
   async function transitionTo(newSlide, direction) {
     if (isTransitioning) return;
     isTransitioning = true;
@@ -222,7 +231,7 @@
     const enterClass = direction === 'up' ? 'entering-from-bottom' : 'entering-from-top';
     newSlide.slide.classList.remove('above', 'below', 'active');
     newSlide.slide.classList.add(enterClass);
-    newSlide.slide.getBoundingClientRect(); // force reflow
+    newSlide.slide.getBoundingClientRect();
 
     if (activeSlide) {
       activeSlide.slide.classList.remove('active');
@@ -233,7 +242,8 @@
     newSlide.slide.classList.remove(enterClass);
     newSlide.slide.classList.add('active');
     currentVideo = newSlide.video;
-    currentVideo.muted = muted;
+    currentVideo.muted  = muted;
+    currentVideo.volume = volume;
 
     try {
       await currentVideo.play();
@@ -251,7 +261,6 @@
     setTimeout(() => { isTransitioning = false; }, 500);
   }
 
-  // ── Progress bar ──
   let progressInterval = null;
   function trackProgress() {
     if (progressInterval) clearInterval(progressInterval);
@@ -262,7 +271,6 @@
     }, 100);
   }
 
-  // ── Preload next ──
   async function preloadNext() {
     try {
       const data = await fetchVideo();
@@ -270,11 +278,9 @@
     } catch { preloaded = null; }
   }
 
-  // ── Go forward ──
   async function nextVideo() {
     if (isTransitioning) return;
     loader.classList.remove('hidden');
-
     let next;
     if (preloaded) {
       next = preloaded;
@@ -293,46 +299,60 @@
     }
 
     await transitionTo(next, 'up');
-
-    // Push to history after transition
     historyStack.push(next);
     updateNavButtons();
 
-    // Clean up old slides (keep max 5 in DOM)
     const all = feed.querySelectorAll('.video-slide');
     if (all.length > 5) all[0].remove();
 
     preloadNext();
   }
 
-  // ── Go back ──
   async function prevVideo() {
     if (isTransitioning || historyStack.length < 2) return;
-
-    // Pop current off the stack
     historyStack.pop();
     const prev = historyStack[historyStack.length - 1];
     if (!prev) return;
-
     await transitionTo(prev, 'down');
     updateNavButtons();
   }
 
-  // ── Mute ──
   function updateMuteBadge() {
     muteBadge.classList.toggle('hidden', !muted);
     document.getElementById('btn-mute').textContent = muted ? '🔇' : '🔊';
   }
+
   function toggleMute() {
     muted = !muted;
     if (currentVideo) currentVideo.muted = muted;
+    // Sync slider — if unmuting and volume was 0, bump it up
+    if (!muted && volume === 0) {
+      volume = 0.5;
+      volSlider.value = volume;
+      if (currentVideo) currentVideo.volume = volume;
+    }
     updateMuteBadge();
   }
 
-  // ── Open thread ──
   function openCurrent() {
     if (activeSlide) window.open(activeSlide.data.thread_url, '_blank');
   }
+
+  // ── Volume slider ──
+  volSlider.addEventListener('input', e => {
+    volume = parseFloat(e.target.value);
+    if (currentVideo) currentVideo.volume = volume;
+    if (volume > 0 && muted) {
+      muted = false;
+      if (currentVideo) currentVideo.muted = false;
+      updateMuteBadge();
+    }
+    if (volume === 0) {
+      muted = true;
+      if (currentVideo) currentVideo.muted = true;
+      updateMuteBadge();
+    }
+  });
 
   // ── Button wiring ──
   document.getElementById('btn-next').addEventListener('click', nextVideo);
@@ -359,8 +379,8 @@
   feed.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
   feed.addEventListener('touchend', e => {
     const delta = touchStartY - e.changedTouches[0].clientY;
-    if (delta > 50)  nextVideo(); // swipe up → next
-    if (delta < -50) prevVideo(); // swipe down → prev
+    if (delta > 50)  nextVideo();
+    if (delta < -50) prevVideo();
   }, { passive: true });
 
   // ── Scroll wheel ──
@@ -383,7 +403,6 @@
   updateMuteBadge();
   updateNavButtons();
   nextVideo().then(() => {
-    // Push the first video into history
     if (activeSlide && historyStack.length === 0) {
       historyStack.push(activeSlide);
       updateNavButtons();
